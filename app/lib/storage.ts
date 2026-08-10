@@ -1,4 +1,4 @@
-import { Task, Flashcard, CourseGrade, UserProfile } from '../types';
+import { Task, Flashcard, CourseGrade, UserProfile, StudySession, QuizAttempt } from '../types';
 
 export const INITIAL_USER_PROFILE: UserProfile = {
   name: 'Alex Vance',
@@ -155,6 +155,38 @@ export const INITIAL_COURSES: CourseGrade[] = [
     color: '#D97706',
   },
 ];
+
+export const INITIAL_SESSIONS: StudySession[] = [
+  { id: 's1', course: 'CS401', durationMinutes: 50, date: '2026-08-04', type: 'pomodoro' },
+  { id: 's2', course: 'MATH302', durationMinutes: 25, date: '2026-08-05', type: 'active_recall' },
+  { id: 's3', course: 'CS310', durationMinutes: 75, date: '2026-08-06', type: 'pomodoro' },
+  { id: 's4', course: 'PHYS201', durationMinutes: 40, date: '2026-08-07', type: 'quiz' },
+  { id: 's5', course: 'CS401', durationMinutes: 60, date: '2026-08-08', type: 'pomodoro' },
+  { id: 's6', course: 'MATH302', durationMinutes: 45, date: '2026-08-09', type: 'active_recall' },
+  { id: 's7', course: 'CS310', durationMinutes: 90, date: '2026-08-10', type: 'pomodoro' },
+];
+
+export const INITIAL_QUIZ_ATTEMPTS: QuizAttempt[] = [
+  {
+    id: 'q1',
+    title: 'Backpropagation & Neural Net Fundamentals',
+    course: 'CS401',
+    score: 4,
+    totalQuestions: 5,
+    date: '2026-08-09',
+    xpEarned: 120,
+  },
+  {
+    id: 'q2',
+    title: 'Eigenvalues & Diagonalization',
+    course: 'MATH302',
+    score: 5,
+    totalQuestions: 5,
+    date: '2026-08-08',
+    xpEarned: 150,
+  },
+];
+
 
 // Helper functions for localStorage persistence
 export const loadStorageItem = <T>(key: string, fallback: T): T => {

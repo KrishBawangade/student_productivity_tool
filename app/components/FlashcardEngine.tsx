@@ -268,8 +268,14 @@ export const FlashcardEngine: React.FC<FlashcardEngineProps> = ({
 
       {/* AI Card Generator Modal */}
       {isGenModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="glass-panel p-6 sm:p-7 rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl relative animate-in fade-in zoom-in-95">
+        <div 
+          onClick={() => setIsGenModalOpen(false)} 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs cursor-pointer animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="glass-panel p-6 sm:p-7 rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 cursor-default"
+          >
             <div className="flex items-center gap-2 text-emerald-600 font-extrabold text-lg mb-2">
               <Sparkles className="w-5 h-5" />
               <h3>AI Flashcard Deck Generator</h3>

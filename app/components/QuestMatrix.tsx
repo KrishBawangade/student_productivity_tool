@@ -196,8 +196,14 @@ export const QuestMatrix: React.FC<QuestMatrixProps> = ({
 
       {/* New Task Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="glass-panel p-6 sm:p-7 rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl relative animate-in fade-in zoom-in-95">
+        <div 
+          onClick={() => setIsModalOpen(false)} 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs cursor-pointer animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="glass-panel p-6 sm:p-7 rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 cursor-default"
+          >
             <h3 className="text-xl font-extrabold text-slate-900 mb-4">Create New Quest</h3>
 
             <form onSubmit={handleFormSubmit} className="space-y-4">

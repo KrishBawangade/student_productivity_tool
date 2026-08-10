@@ -4,13 +4,15 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   Zap, Award, Flame, Brain, CheckCircle2, TrendingUp, MessageSquare, 
-  Sparkles, Volume2, ArrowLeft, LayoutGrid, ListTodo, Layers, Calculator
+  Sparkles, Volume2, ArrowLeft, LayoutGrid, ListTodo, Layers, Calculator,
+  BarChart3, BookOpen, HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { Task, Flashcard, CourseGrade, UserProfile } from '../types';
+import { Task, Flashcard, CourseGrade, UserProfile, StudySession, QuizAttempt } from '../types';
 import { 
   INITIAL_USER_PROFILE, INITIAL_TASKS, INITIAL_FLASHCARDS, INITIAL_COURSES, 
+  INITIAL_SESSIONS, INITIAL_QUIZ_ATTEMPTS,
   loadStorageItem, saveStorageItem 
 } from '../lib/storage';
 
@@ -20,11 +22,16 @@ import { FlashcardEngine } from '../components/FlashcardEngine';
 import { GradeForecaster } from '../components/GradeForecaster';
 import { AiCopilotDrawer } from '../components/AiCopilotDrawer';
 import { LevelProgressModal } from '../components/LevelProgressModal';
+import { StudyAnalytics } from '../components/StudyAnalytics';
+import { QuizEngineModal } from '../components/QuizEngineModal';
+import { CourseManagerModal } from '../components/CourseManagerModal';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'bento' | 'quests' | 'cards' | 'forecaster'>('bento');
+  const [activeTab, setActiveTab] = useState<'bento' | 'quests' | 'cards' | 'forecaster' | 'analytics'>('bento');
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [xpToast, setXpToast] = useState<string | null>(null);
 
   // Persistent User Profile state
@@ -47,6 +54,16 @@ export default function DashboardPage() {
     loadStorageItem<CourseGrade[]>('nexus_courses', INITIAL_COURSES)
   );
 
+  // Persistent Study Sessions state
+  const [sessions, setSessions] = useState<StudySession[]>(() =>
+    loadStorageItem<StudySession[]>('nexus_study_sessions', INITIAL_SESSIONS)
+  );
+
+  // Persistent Quiz Attempts state
+  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(() =>
+    loadStorageItem<QuizAttempt[]>('nexus_quiz_attempts', INITIAL_QUIZ_ATTEMPTS)
+  );
+
   // Save changes to LocalStorage
   useEffect(() => {
     saveStorageItem('nexus_user_profile', user);
@@ -63,6 +80,14 @@ export default function DashboardPage() {
   useEffect(() => {
     saveStorageItem('nexus_courses', courses);
   }, [courses]);
+
+  useEffect(() => {
+    saveStorageItem('nexus_study_sessions', sessions);
+  }, [sessions]);
+
+  useEffect(() => {
+    saveStorageItem('nexus_quiz_attempts', quizAttempts);
+  }, [quizAttempts]);
 
   // XP Trigger helper
   const triggerXpGain = (amount: number, reason: string) => {
@@ -198,6 +223,12 @@ export default function DashboardPage() {
     triggerXpGain(25, `Added Course ${newCourse.code}`);
   };
 
+  // Quiz Complete Action
+  const handleQuizComplete = (attempt: QuizAttempt) => {
+    setQuizAttempts((prev) => [attempt, ...prev]);
+    triggerXpGain(attempt.xpEarned, `Completed Quiz "${attempt.title}"!`);
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAFC] text-slate-900 font-sans selection:bg-indigo-600 selection:text-white relative">
       
@@ -235,7 +266,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Tab Navigation */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/90 text-xs font-bold">
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/90 text-xs font-bold">
             <button
               onClick={() => setActiveTab('bento')}
               className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
@@ -275,15 +306,45 @@ export default function DashboardPage() {
               <Calculator className="w-3.5 h-3.5" />
               <span>Grade Forecaster</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                activeTab === 'analytics' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Analytics & Flow</span>
+            </button>
           </nav>
 
-          {/* User Profile Stats & AI Launcher */}
-          <div className="flex items-center gap-3">
+          {/* Quick Action Launchers & User Profile */}
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Practice Quiz Launcher */}
+            <button
+              onClick={() => setIsQuizModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors flex items-center gap-1.5"
+              title="Launch Practice Quiz"
+            >
+              <HelpCircle className="w-4 h-4 text-indigo-600" />
+              <span className="hidden sm:inline">AI Quiz</span>
+            </button>
+
+            {/* Course Manager Launcher */}
+            <button
+              onClick={() => setIsCourseModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-colors flex items-center gap-1.5"
+              title="Manage Courses & Syllabus"
+            >
+              <BookOpen className="w-4 h-4 text-slate-600" />
+              <span className="hidden sm:inline">Courses</span>
+            </button>
+
             {/* User Level Profile Badge */}
             <button
               onClick={() => setIsLevelModalOpen(true)}
-              className="flex items-center gap-3 glass-card px-3.5 py-1.5 rounded-2xl border border-slate-200 shadow-2xs bg-white/90 hover:scale-102 transition-transform"
+              className="flex items-center gap-2.5 glass-card px-3 py-1.5 rounded-2xl border border-slate-200 shadow-2xs bg-white/90 hover:scale-102 transition-transform cursor-pointer"
             >
               <div className="w-7 h-7 rounded-full bg-indigo-100 border border-indigo-300 flex items-center justify-center font-extrabold text-[11px] text-indigo-700 font-mono">
                 L{user.level}
@@ -308,7 +369,7 @@ export default function DashboardPage() {
             {/* AI Copilot Drawer Launcher Button */}
             <button
               onClick={() => setIsCopilotOpen(true)}
-              className="px-3.5 py-2 rounded-2xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-md flex items-center gap-1.5 transition-all hover:scale-105"
+              className="px-3.5 py-2 rounded-2xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-md flex items-center gap-1.5 transition-all hover:scale-105 cursor-pointer"
             >
               <MessageSquare className="w-4 h-4 text-indigo-400" />
               <span className="hidden sm:inline">AI Copilot</span>
@@ -321,7 +382,7 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
         
         {/* Mobile Tab Switcher */}
-        <div className="flex md:hidden items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold mb-6 overflow-x-auto">
+        <div className="flex lg:hidden items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold mb-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('bento')}
             className={`px-3 py-1.5 rounded-xl shrink-0 ${activeTab === 'bento' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}
@@ -345,6 +406,12 @@ export default function DashboardPage() {
             className={`px-3 py-1.5 rounded-xl shrink-0 ${activeTab === 'forecaster' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}
           >
             Forecaster
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-3 py-1.5 rounded-xl shrink-0 ${activeTab === 'analytics' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}
+          >
+            Analytics
           </button>
         </div>
 
@@ -453,6 +520,21 @@ export default function DashboardPage() {
             <GradeForecaster courses={courses} onAddCourse={handleAddCourse} />
           </div>
         )}
+
+        {/* Tab 5: Analytics & Flow Tab */}
+        {activeTab === 'analytics' && (
+          <div className="animate-in fade-in duration-300">
+            <StudyAnalytics
+              user={user}
+              tasks={tasks}
+              cards={cards}
+              courses={courses}
+              sessions={sessions}
+              quizAttempts={quizAttempts}
+            />
+          </div>
+        )}
+
       </main>
 
       {/* AI Copilot Drawer */}
@@ -464,6 +546,22 @@ export default function DashboardPage() {
         isOpen={isLevelModalOpen}
         onClose={() => setIsLevelModalOpen(false)}
       />
+
+      {/* Interactive AI Quiz Modal */}
+      <QuizEngineModal
+        isOpen={isQuizModalOpen}
+        onClose={() => setIsQuizModalOpen(false)}
+        onQuizComplete={handleQuizComplete}
+      />
+
+      {/* Course & Syllabus Manager Modal */}
+      <CourseManagerModal
+        isOpen={isCourseModalOpen}
+        onClose={() => setIsCourseModalOpen(false)}
+        courses={courses}
+        onAddCourse={handleAddCourse}
+      />
+
     </div>
   );
 }

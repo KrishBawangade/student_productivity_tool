@@ -89,8 +89,14 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/40 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-slate-950 text-white h-full shadow-2xl flex flex-col justify-between border-l border-slate-800 relative animate-in slide-in-from-right duration-300">
+    <div 
+      onClick={onClose} 
+      className="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-xs flex justify-end animate-in fade-in duration-200 cursor-pointer"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        className="w-full max-w-lg bg-slate-950 text-white h-full shadow-2xl flex flex-col justify-between border-l border-slate-800 relative animate-in slide-in-from-right duration-300 cursor-default"
+      >
         
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 backdrop-blur-md">

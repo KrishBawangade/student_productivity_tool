@@ -11,8 +11,8 @@ import { Task, Flashcard } from '../types';
 export const InteractiveDashboardPreview: React.FC = () => {
   // --- XP & Gamification State ---
   const [xp, setXp] = useState(2450);
-  const [level, setLevel] = useState(14);
-  const [streak, setStreak] = useState(7);
+  const [level] = useState(14);
+  const [streak] = useState(7);
   const [xpToast, setXpToast] = useState<string | null>(null);
 
   const triggerXpGain = (amount: number, reason: string) => {
@@ -23,8 +23,8 @@ export const InteractiveDashboardPreview: React.FC = () => {
     // Fire Confetti
     try {
       confetti({
-        particleCount: 45,
-        spread: 65,
+        particleCount: 50,
+        spread: 60,
         origin: { y: 0.7 },
         colors: ['#4F46E5', '#0284C7', '#059669'],
       });
@@ -40,17 +40,22 @@ export const InteractiveDashboardPreview: React.FC = () => {
   const [activeSound, setActiveSound] = useState<'rain' | 'cyber' | 'cafe' | 'none'>('cyber');
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerRunning && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (timerSeconds === 0 && isTimerRunning) {
-      setIsTimerRunning(false);
-      triggerXpGain(150, 'Completed Focus Session! 🧠');
-    }
+    if (!isTimerRunning) return;
+
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsTimerRunning(false);
+          triggerXpGain(150, 'Completed Focus Session! 🧠');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(interval);
-  }, [isTimerRunning, timerSeconds]);
+  }, [isTimerRunning]);
 
   const toggleTimer = () => setIsTimerRunning(!isTimerRunning);
 

@@ -54,3 +54,41 @@ export interface UserProfile {
   completedTasks: number;
   masteredCards: number;
 }
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface QuizAttempt {
+  id: string;
+  title: string;
+  course: string;
+  score: number;
+  totalQuestions: number;
+  date: string;
+  xpEarned: number;
+}
+
+export interface StudySession {
+  id: string;
+  course: string;
+  durationMinutes: number;
+  date: string; // ISO date string (YYYY-MM-DD)
+  type: 'pomodoro' | 'active_recall' | 'quiz';
+}
+
+export interface CourseWeight {
+  category: string;
+  weight: number;
+  earnedPercentage: number;
+}
+
+export interface DetailedCourseGrade extends CourseGrade {
+  credits?: number;
+  weights?: CourseWeight[];
+}
+

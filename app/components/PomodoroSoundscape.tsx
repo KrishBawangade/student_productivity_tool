@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles, Flame } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { audioEngine } from '../lib/audioEngine';
 
 interface PomodoroSoundscapeProps {
@@ -19,18 +19,23 @@ export const PomodoroSoundscape: React.FC<PomodoroSoundscapeProps> = ({ onSessio
   const [customMins, setCustomMins] = useState(25);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isRunning && secondsLeft > 0) {
-      timer = setInterval(() => {
-        setSecondsLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (secondsLeft === 0 && isRunning) {
-      setIsRunning(false);
-      const xp = mode === 'work' ? 150 : 30;
-      onSessionComplete(xp);
-    }
+    if (!isRunning) return;
+
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsRunning(false);
+          const xp = mode === 'work' ? 150 : 30;
+          onSessionComplete(xp);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(timer);
-  }, [isRunning, secondsLeft, mode, onSessionComplete]);
+  }, [isRunning, mode, onSessionComplete]);
 
   const toggleTimer = () => {
     const nextState = !isRunning;
