@@ -50,6 +50,7 @@ export interface UserProfile {
   xp: number;
   nextLevelXp: number;
   streak: number;
+  streakShields?: number;
   totalFocusMinutes: number;
   completedTasks: number;
   masteredCards: number;

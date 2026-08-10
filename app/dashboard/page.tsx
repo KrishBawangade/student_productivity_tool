@@ -34,70 +34,57 @@ export default function DashboardPage() {
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [xpToast, setXpToast] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Persistent User Profile state
-  const [user, setUser] = useState<UserProfile>(() =>
-    loadStorageItem<UserProfile>('nexus_user_profile', INITIAL_USER_PROFILE)
-  );
+  // States initialized with default constants to match Server HTML 100% on initial hydration
+  const [user, setUser] = useState<UserProfile>(INITIAL_USER_PROFILE);
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [cards, setCards] = useState<Flashcard[]>(INITIAL_FLASHCARDS);
+  const [courses, setCourses] = useState<CourseGrade[]>(INITIAL_COURSES);
+  const [sessions, setSessions] = useState<StudySession[]>(INITIAL_SESSIONS);
+  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(INITIAL_QUIZ_ATTEMPTS);
+  const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
 
-  // Persistent Tasks state
-  const [tasks, setTasks] = useState<Task[]>(() =>
-    loadStorageItem<Task[]>('nexus_tasks', INITIAL_TASKS)
-  );
-
-  // Persistent Flashcards state
-  const [cards, setCards] = useState<Flashcard[]>(() =>
-    loadStorageItem<Flashcard[]>('nexus_flashcards', INITIAL_FLASHCARDS)
-  );
-
-  // Persistent Courses state
-  const [courses, setCourses] = useState<CourseGrade[]>(() =>
-    loadStorageItem<CourseGrade[]>('nexus_courses', INITIAL_COURSES)
-  );
-
-  // Persistent Study Sessions state
-  const [sessions, setSessions] = useState<StudySession[]>(() =>
-    loadStorageItem<StudySession[]>('nexus_study_sessions', INITIAL_SESSIONS)
-  );
-
-  // Persistent Quiz Attempts state
-  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(() =>
-    loadStorageItem<QuizAttempt[]>('nexus_quiz_attempts', INITIAL_QUIZ_ATTEMPTS)
-  );
-
-  // Persistent Smart Notes state
-  const [notes, setNotes] = useState<NoteItem[]>(() =>
-    loadStorageItem<NoteItem[]>('nexus_smart_notes', INITIAL_NOTES)
-  );
-
-  // Save changes to LocalStorage
+  // Safely load LocalStorage state on client after initial hydration
   useEffect(() => {
-    saveStorageItem('nexus_user_profile', user);
-  }, [user]);
+    setUser(loadStorageItem<UserProfile>('nexus_user_profile', INITIAL_USER_PROFILE));
+    setTasks(loadStorageItem<Task[]>('nexus_tasks', INITIAL_TASKS));
+    setCards(loadStorageItem<Flashcard[]>('nexus_flashcards', INITIAL_FLASHCARDS));
+    setCourses(loadStorageItem<CourseGrade[]>('nexus_courses', INITIAL_COURSES));
+    setSessions(loadStorageItem<StudySession[]>('nexus_study_sessions', INITIAL_SESSIONS));
+    setQuizAttempts(loadStorageItem<QuizAttempt[]>('nexus_quiz_attempts', INITIAL_QUIZ_ATTEMPTS));
+    setNotes(loadStorageItem<NoteItem[]>('nexus_smart_notes', INITIAL_NOTES));
+    setIsMounted(true);
+  }, []);
+
+  // Save changes to LocalStorage only after initial mount
+  useEffect(() => {
+    if (isMounted) saveStorageItem('nexus_user_profile', user);
+  }, [user, isMounted]);
 
   useEffect(() => {
-    saveStorageItem('nexus_tasks', tasks);
-  }, [tasks]);
+    if (isMounted) saveStorageItem('nexus_tasks', tasks);
+  }, [tasks, isMounted]);
 
   useEffect(() => {
-    saveStorageItem('nexus_flashcards', cards);
-  }, [cards]);
+    if (isMounted) saveStorageItem('nexus_flashcards', cards);
+  }, [cards, isMounted]);
 
   useEffect(() => {
-    saveStorageItem('nexus_courses', courses);
-  }, [courses]);
+    if (isMounted) saveStorageItem('nexus_courses', courses);
+  }, [courses, isMounted]);
 
   useEffect(() => {
-    saveStorageItem('nexus_study_sessions', sessions);
-  }, [sessions]);
+    if (isMounted) saveStorageItem('nexus_study_sessions', sessions);
+  }, [sessions, isMounted]);
 
   useEffect(() => {
-    saveStorageItem('nexus_quiz_attempts', quizAttempts);
-  }, [quizAttempts]);
+    if (isMounted) saveStorageItem('nexus_quiz_attempts', quizAttempts);
+  }, [quizAttempts, isMounted]);
 
   useEffect(() => {
-    saveStorageItem('nexus_smart_notes', notes);
-  }, [notes]);
+    if (isMounted) saveStorageItem('nexus_smart_notes', notes);
+  }, [notes, isMounted]);
 
   // XP Trigger helper
   const triggerXpGain = (amount: number, reason: string) => {
@@ -253,6 +240,21 @@ export default function DashboardPage() {
 
   const handleDeleteNote = (id: string) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleBuyStreakShield = () => {
+    if (user.xp < 500) {
+      setXpToast('Need at least 500 XP to buy a Streak Shield!');
+      setTimeout(() => setXpToast(null), 3000);
+      return;
+    }
+    setUser((prev) => ({
+      ...prev,
+      xp: prev.xp - 500,
+      streakShields: (prev.streakShields || 0) + 1,
+    }));
+    setXpToast('🛡️ Purchased 1 Streak Shield! (500 XP Deducted)');
+    setTimeout(() => setXpToast(null), 3000);
   };
 
   const handleGenerateFlashcardsFromNote = (noteTitle: string, newCards: Flashcard[]) => {
@@ -624,6 +626,7 @@ export default function DashboardPage() {
         user={user}
         isOpen={isLevelModalOpen}
         onClose={() => setIsLevelModalOpen(false)}
+        onBuyStreakShield={handleBuyStreakShield}
       />
 
       {/* Interactive AI Quiz Modal */}

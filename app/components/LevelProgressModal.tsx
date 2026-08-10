@@ -9,9 +9,10 @@ interface LevelProgressModalProps {
   user: UserProfile;
   isOpen: boolean;
   onClose: () => void;
+  onBuyStreakShield?: () => void;
 }
 
-export const LevelProgressModal: React.FC<LevelProgressModalProps> = ({ user, isOpen, onClose }) => {
+export const LevelProgressModal: React.FC<LevelProgressModalProps> = ({ user, isOpen, onClose, onBuyStreakShield }) => {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -105,6 +106,29 @@ export const LevelProgressModal: React.FC<LevelProgressModalProps> = ({ user, is
           </div>
         </div>
 
+        {/* Gamification Items & Streak Shield */}
+        <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-200 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-300 flex items-center justify-center text-amber-700">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs font-extrabold text-amber-900">Streak Shield</div>
+              <div className="text-[11px] text-amber-700">
+                Protects 1 day of missed study. Owned: <strong>{user.streakShields || 0}</strong>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={onBuyStreakShield}
+            disabled={user.xp < 500}
+            className="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-amber-600 hover:bg-amber-700 disabled:opacity-40 text-white shadow-md transition-all hover:scale-105"
+          >
+            Buy (500 XP)
+          </button>
+        </div>
+
         {/* Scholar Ranks Spectrum */}
         <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">
           Scholar Ranks &amp; Title Progression
@@ -154,3 +178,4 @@ export const LevelProgressModal: React.FC<LevelProgressModalProps> = ({ user, is
     </div>
   );
 };
+

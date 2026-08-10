@@ -126,7 +126,7 @@
 | Phase | Milestone | Deliverables | Target Date |
 |---|---|---|---|
 | **Phase 1** | **Interactive UI MVP** | Next.js 16 Dashboard with Bento preview, Pomodoro, Soundscapes, Quest Matrix, XP engine, Flashcard Deck, Landing Page. | **Aug 2026 (Completed)** |
-| **Phase 2** | **AI Backend Integration** | Connect Next.js API routes with OpenAI/Gemini for flashcard auto-generation and Copilot chat drawer. | **Q3 2026** |
+| **Phase 2** | **AI Backend Integration** | Connect Next.js API routes with Google Gemini for flashcard auto-generation, document context upload, and Copilot chat. | **Aug 2026 (Completed)** |
 | **Phase 3** | **Persisted Storage & LMS Sync** | User authentication (Clerk/NextAuth), PostgreSQL DB sync, Canvas/Blackboard grade & calendar import. | **Q4 2026** |
 
 ---

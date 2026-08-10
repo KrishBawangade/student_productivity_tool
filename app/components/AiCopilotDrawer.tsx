@@ -1,7 +1,5 @@
-'use client';
-
-import React, { useState } from 'react';
-import { MessageSquare, Sparkles, Send, X, Copy, Check, Terminal, Brain, HelpCircle, Code } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { MessageSquare, Sparkles, Send, X, Copy, Check, Terminal, Brain, HelpCircle, Code, Paperclip, FileText, Cpu } from 'lucide-react';
 import { CopilotMessage } from '../types';
 
 interface AiCopilotDrawerProps {
@@ -14,7 +12,7 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
     {
       id: 'm1',
       sender: 'assistant',
-      text: 'Hello Alex! I am your 24/7 AI Study Copilot. How can I assist your academic work today? Select a mode below or type your question!',
+      text: 'Hello! I am your 24/7 Google Gemini AI Study Copilot. Attach your lecture notes, select a mode below, or ask any academic question!',
       mode: 'general',
       timestamp: '10:00 AM',
     },
@@ -24,8 +22,26 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
   const [selectedMode, setSelectedMode] = useState<'eli5' | 'socratic' | 'formula' | 'general'>('general');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [attachedDocName, setAttachedDocName] = useState<string | null>(null);
+  const [attachedDocContent, setAttachedDocContent] = useState<string | null>(null);
+  const [isAiLive, setIsAiLive] = useState<boolean | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachedDocName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setAttachedDocContent(text);
+    };
+    reader.readAsText(file);
+  };
 
   const handleSendMessage = async (customQuery?: string, customMode?: 'eli5' | 'socratic' | 'formula' | 'general') => {
     const textToSend = customQuery || inputQuery;
@@ -36,7 +52,7 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
     const userMsg: CopilotMessage = {
       id: `usr_${Date.now()}`,
       sender: 'user',
-      text: textToSend.trim(),
+      text: textToSend.trim() + (attachedDocName ? ` (Attached: ${attachedDocName})` : ''),
       mode: modeToSend,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
@@ -52,10 +68,12 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
         body: JSON.stringify({
           prompt: textToSend,
           mode: modeToSend,
+          documentContext: attachedDocContent || undefined,
         }),
       });
 
       const data = await res.json();
+      setIsAiLive(!!data.isAiLive);
 
       const aiMsg: CopilotMessage = {
         id: `ai_${Date.now()}`,
@@ -105,8 +123,17 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h3 className="font-extrabold text-white text-base leading-tight">AI Study Copilot</h3>
-              <p className="text-[11px] text-slate-400 font-mono">GPT-4o Academic Tutor</p>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-white text-base leading-tight">AI Study Copilot</h3>
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                  isAiLive 
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                }`}>
+                  {isAiLive ? 'Gemini Live' : 'Gemini Ready'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-mono">Google Gemini 1.5 Academic Assistant</p>
             </div>
           </div>
 
@@ -181,7 +208,7 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
                 }`}
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1 font-mono">
-                  <span>{msg.sender === 'user' ? 'You' : 'AI Copilot'}</span>
+                  <span>{msg.sender === 'user' ? 'You' : 'Gemini Copilot'}</span>
                   <span>{msg.timestamp}</span>
                 </div>
 
@@ -218,10 +245,29 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
           {isLoading && (
             <div className="flex items-center gap-2 text-indigo-400 py-2 font-mono text-xs animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin text-indigo-400" />
-              <span>Generating response with GPT-4o...</span>
+              <span>Gemini AI is processing your request...</span>
             </div>
           )}
         </div>
+
+        {/* Attached Document Banner */}
+        {attachedDocName && (
+          <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-indigo-300 font-mono">
+            <span className="flex items-center gap-1.5 truncate">
+              <FileText className="w-4 h-4 text-indigo-400" />
+              <span>Attached Context: <strong>{attachedDocName}</strong></span>
+            </span>
+            <button
+              onClick={() => {
+                setAttachedDocName(null);
+                setAttachedDocContent(null);
+              }}
+              className="text-slate-400 hover:text-rose-400 p-1"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Input Bar */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/80">
@@ -232,6 +278,22 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
             }}
             className="flex items-center gap-2"
           >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".txt,.md,.pdf,.json"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach Document Context (.txt, .md, .pdf)"
+              className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all border border-slate-700"
+            >
+              <Paperclip className="w-4 h-4" />
+            </button>
+
             <input
               type="text"
               placeholder="Ask anything about your courses, equations, or notes..."
@@ -252,3 +314,4 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({ isOpen, onClos
     </div>
   );
 };
+
