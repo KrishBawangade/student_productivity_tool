@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Sparkles, Flame, ArrowRight, ArrowDown, Zap, CheckCircle2, TrendingUp, Brain } from 'lucide-react';
+import Link from 'next/link';
 import { Button, Badge, Card } from './ui';
 
 interface LandingHeroProps {
@@ -13,7 +14,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
     <section className="relative pt-16 pb-20 px-6 max-w-7xl mx-auto text-center z-10">
       
       {/* Top Floating Pill Badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-pill mb-8 border border-indigo-200/80 text-indigo-900 text-xs font-bold tracking-wide shadow-sm">
+      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-pill mb-8 border border-indigo-200/80 text-indigo-900 text-xs font-bold tracking-wide shadow-xs">
         <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
         <span>INTELLIGENT ACADEMIC WORKSPACE v1.0</span>
         <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
@@ -22,7 +23,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
       {/* Main Headline */}
       <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-slate-900 max-w-5xl mx-auto leading-[1.12]">
         Supercharge Your{' '}
-        <span className="text-gradient-accent drop-shadow-sm">
+        <span className="text-gradient-accent drop-shadow-xs">
           Academic Velocity
         </span>
       </h1>
@@ -34,20 +35,19 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
 
       {/* CTA Button Group */}
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={onScrollToDemo}
-          icon={<ArrowRight className="w-4 h-4" />}
-        >
-          GET STARTED FREE
-        </Button>
-
-        <a href="#features">
-          <Button variant="secondary" size="lg">
-            EXPLORE FEATURES
+        <Link href="/dashboard">
+          <Button
+            variant="primary"
+            size="lg"
+            icon={<ArrowRight className="w-4 h-4" />}
+          >
+            LAUNCH DASHBOARD APP
           </Button>
-        </a>
+        </Link>
+
+        <Button variant="secondary" size="lg" onClick={onScrollToDemo}>
+          EXPLORE BENTO DEMO
+        </Button>
       </div>
 
       {/* KPI Stats Bar */}
@@ -115,7 +115,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
           </div>
 
           <div className="p-6 sm:p-8 bg-gradient-to-b from-slate-50 to-white grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs font-bold text-indigo-600">
                 <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Focus Lab</span>
                 <Badge variant="indigo" size="sm">Sprint</Badge>
@@ -130,7 +130,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs font-bold text-slate-900">
                 <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" /> Quest Matrix</span>
                 <Badge variant="emerald" size="sm">2/3 Done</Badge>
@@ -151,7 +151,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs font-bold text-slate-900">
                 <span className="flex items-center gap-1.5"><Brain className="w-3.5 h-3.5 text-indigo-600" /> AI Copilot</span>
                 <Badge variant="indigo" size="sm">GPT-4o</Badge>

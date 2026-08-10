@@ -96,6 +96,10 @@ export const InteractiveDashboardPreview: React.FC = () => {
       answer: 'O(n log n). Partitioning divides the array around a pivot.',
       topic: 'Data Structures',
       difficulty: 'Medium',
+      easeFactor: 2.5,
+      interval: 1,
+      repetitions: 0,
+      dueDate: new Date().toISOString(),
     },
     {
       id: 'f2',
@@ -103,6 +107,10 @@ export const InteractiveDashboardPreview: React.FC = () => {
       answer: 'L1 (Lasso) shrinks weights to 0. L2 (Ridge) penalizes squared magnitude of weights.',
       topic: 'Machine Learning',
       difficulty: 'Hard',
+      easeFactor: 2.3,
+      interval: 1,
+      repetitions: 0,
+      dueDate: new Date().toISOString(),
     },
     {
       id: 'f3',
@@ -110,6 +118,10 @@ export const InteractiveDashboardPreview: React.FC = () => {
       answer: 'A system can provide at most two of: Consistency, Availability, and Partition Tolerance.',
       topic: 'Systems',
       difficulty: 'Easy',
+      easeFactor: 2.6,
+      interval: 6,
+      repetitions: 2,
+      dueDate: new Date().toISOString(),
     },
   ];
   const [cardIndex, setCardIndex] = useState(0);
