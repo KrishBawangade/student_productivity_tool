@@ -1,4 +1,4 @@
-import { Task, Flashcard, CourseGrade, UserProfile, StudySession, QuizAttempt } from '../types';
+import { Task, Flashcard, CourseGrade, UserProfile, StudySession, QuizAttempt, NoteItem } from '../types';
 
 export const INITIAL_USER_PROFILE: UserProfile = {
   name: 'Alex Vance',
@@ -184,6 +184,119 @@ export const INITIAL_QUIZ_ATTEMPTS: QuizAttempt[] = [
     totalQuestions: 5,
     date: '2026-08-08',
     xpEarned: 150,
+  },
+];
+
+
+export const INITIAL_NOTES: NoteItem[] = [
+  {
+    id: 'note-1',
+    title: 'CS401: Deep Neural Networks & Backpropagation Mechanics',
+    course: 'CS401',
+    rawText: `Lecture 8: Neural Network Gradient Optimization & Chain Rule
+    
+1. Supervised Learning Foundation:
+Given training pairs (x_i, y_i), neural networks map input vectors x through layered weight matrices W_1, W_2, ... W_L using non-linear activation functions (ReLU, GELU, Sigmoid).
+
+2. Loss Minimization & Objective Function:
+The Cross-Entropy Loss L(y, y_hat) measures discrepancy between target probability distribution y and predicted softmax output y_hat:
+L = - sum(y_i * log(y_hat_i))
+
+3. The Backpropagation Algorithm:
+Backprop applies the multivariate chain rule to calculate exact gradients of loss with respect to each parameter layer.
+- Forward Pass: Compute activations a_l = sigma(z_l) where z_l = W_l * a_{l-1} + b_l.
+- Backward Pass: Compute error terms delta_L = grad_z L, then propagate recursively backward:
+  delta_l = (W_{l+1}^T * delta_{l+1}) * sigma'(z_l).
+- Weight Update: Update weights W_l = W_l - eta * (delta_l * a_{l-1}^T) using learning rate eta.
+
+4. Optimization Challenges:
+- Vanishing Gradients: Caused by saturating activations (Sigmoid, Tanh). Solved by ReLU and Residual Connections (ResNets).
+- Exploding Gradients: Mitigated by Gradient Clipping.
+- Momentum & Adam Optimizer: Incorporates exponentially weighted moving averages of first and second gradient moments.`,
+    summary: 'A comprehensive deep dive into Deep Neural Networks, loss function minimization via Cross-Entropy, step-by-step mathematical backpropagation chain rule derivation, and optimization stabilization techniques (Adam, ReLU, Residual Connections).',
+    keyTakeaways: [
+      'Forward pass calculates activations a_l = σ(W_l * a_{l-1} + b_l); backward pass calculates gradient error terms δ_l via chain rule.',
+      'Cross-Entropy Loss quantifies probability divergence between target labels and softmax predicted output.',
+      'Saturating activations like Sigmoid induce vanishing gradients; modern architectures mitigate this using ReLU, LayerNorm, and Residual skip connections.',
+      'Adam Optimizer combines First Moment (Momentum) and Second Moment (RMSProp) gradient estimation for stable gradient updates.',
+    ],
+    tags: ['Machine Learning', 'Neural Networks', 'Calculus', 'Optimization'],
+    createdAt: '2026-08-08T10:00:00.000Z',
+    lastUpdated: '2026-08-10T14:20:00.000Z',
+    generatedFlashcardsCount: 3,
+    generatedQuizCount: 1,
+  },
+  {
+    id: 'note-2',
+    title: 'MATH302: Singular Value Decomposition (SVD) & Principal Component Analysis',
+    course: 'MATH302',
+    rawText: `Lecture 12: Matrix Factorization & Dimensionality Reduction
+
+1. Fundamental Theorem of Linear Algebra:
+Every real matrix A of dimension (m x n) can be factored into three matrices:
+A = U * Sigma * V^T
+- U: (m x m) orthogonal matrix containing left singular vectors (eigenvectors of A * A^T).
+- Sigma: (m x n) diagonal matrix containing non-negative singular values sigma_1 >= sigma_2 >= ... >= sigma_r > 0.
+- V^T: (n x n) transpose of orthogonal matrix containing right singular vectors (eigenvectors of A^T * A).
+
+2. Connection to Eigenvalues:
+The singular values sigma_i are the exact square roots of non-zero eigenvalues lambda_i of A^T * A:
+sigma_i = sqrt(lambda_i).
+
+3. Low-Rank Matrix Approximation (Eckart-Young Theorem):
+Truncating SVD to top-k singular values yields matrix A_k = sum_{i=1}^k (sigma_i * u_i * v_i^T), which is the optimal rank-k approximation under Frobenius norm.
+
+4. Principal Component Analysis (PCA):
+PCA projects high-dimensional data onto orthogonal axes of maximum variance. Data covariance matrix C = (1/N) X^T X. The principal components correspond precisely to the right singular vectors V of mean-centered data matrix X.`,
+    summary: 'Detailed mathematical breakdown of Singular Value Decomposition (A = UΣVᵀ), relationship between singular values and matrix eigenvalues, rank-k matrix approximation, and PCA dimensionality reduction.',
+    keyTakeaways: [
+      'SVD factorizes any matrix A (m x n) into orthogonal matrices U, V and non-negative diagonal matrix Σ.',
+      'Singular values σ_i are square roots of eigenvalues of AᵀA (σ_i = √λ_i).',
+      'Truncated SVD provides the mathematically optimal low-rank matrix approximation (Eckart-Young Theorem).',
+      'PCA calculates principal axes of maximum data variance by taking eigenvectors of the mean-centered covariance matrix.',
+    ],
+    tags: ['Linear Algebra', 'SVD', 'PCA', 'Data Science'],
+    createdAt: '2026-08-07T14:30:00.000Z',
+    lastUpdated: '2026-08-09T18:10:00.000Z',
+    generatedFlashcardsCount: 2,
+    generatedQuizCount: 1,
+  },
+  {
+    id: 'note-3',
+    title: 'CS310: Self-Balancing Binary Search Trees (Red-Black & B-Trees)',
+    course: 'CS310',
+    rawText: `Lecture 15: Advanced Tree Data Structures
+
+1. Self-Balancing BST Motivation:
+Unbalanced BSTs can degenerate into O(n) linked lists when inserted with sorted data. Balanced trees maintain height h = O(log n), guaranteeing worst-case search, insertion, and deletion in O(log n).
+
+2. Red-Black Tree Properties:
+A binary search tree where each node is colored Red or Black satisfying 5 invariants:
+1) Every node is either red or black.
+2) The root is always black.
+3) All leaf nodes (NIL) are black.
+4) If a node is red, both its children must be black (no double reds!).
+5) Every simple path from a node to descendant leaves contains the exact same number of black nodes (Black-Height).
+
+3. Rebalancing Operations:
+- Rotations: Left Rotation and Right Rotation change structural pointer depth in O(1) time.
+- Color Recoloring: Flips parent and uncle colors when double red violations occur.
+
+4. B-Trees for External Disk Memory:
+- Multi-way search trees of order m where nodes hold up to m-1 keys and m child pointers.
+- Designed to minimize expensive disk I/O operations by storing large blocks of keys per node.`,
+    summary: 'Explores the 5 invariants of Red-Black Trees, structural rotation and recoloring rebalancing operations, and multi-way B-Tree storage structures optimized for disk access.',
+    keyTakeaways: [
+      'Red-Black Trees enforce 5 strict balance invariants ensuring height never exceeds 2 * log_2(n + 1).',
+      'Left and Right tree rotations restructure pointer depth in O(1) time to maintain balance.',
+      'No double red nodes are permitted (red parent must have black children).',
+      'B-Trees optimize external memory disk reads by storing up to m-1 keys per page block.',
+    ],
+    tags: ['Data Structures', 'Algorithms', 'Trees', 'Performance'],
+    createdAt: '2026-08-05T09:15:00.000Z',
+    lastUpdated: '2026-08-08T11:45:00.000Z',
+    generatedFlashcardsCount: 2,
+    generatedQuizCount: 0,
   },
 ];
 

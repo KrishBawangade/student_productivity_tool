@@ -92,3 +92,17 @@ export interface DetailedCourseGrade extends CourseGrade {
   weights?: CourseWeight[];
 }
 
+export interface NoteItem {
+  id: string;
+  title: string;
+  course: string;
+  rawText: string;
+  summary: string;
+  keyTakeaways: string[];
+  tags: string[];
+  createdAt: string;
+  lastUpdated: string;
+  generatedFlashcardsCount?: number;
+  generatedQuizCount?: number;
+}
+

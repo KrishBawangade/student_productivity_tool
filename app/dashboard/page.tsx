@@ -9,10 +9,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { Task, Flashcard, CourseGrade, UserProfile, StudySession, QuizAttempt } from '../types';
+import { Task, Flashcard, CourseGrade, UserProfile, StudySession, QuizAttempt, NoteItem } from '../types';
 import { 
   INITIAL_USER_PROFILE, INITIAL_TASKS, INITIAL_FLASHCARDS, INITIAL_COURSES, 
-  INITIAL_SESSIONS, INITIAL_QUIZ_ATTEMPTS,
+  INITIAL_SESSIONS, INITIAL_QUIZ_ATTEMPTS, INITIAL_NOTES,
   loadStorageItem, saveStorageItem 
 } from '../lib/storage';
 
@@ -25,9 +25,10 @@ import { LevelProgressModal } from '../components/LevelProgressModal';
 import { StudyAnalytics } from '../components/StudyAnalytics';
 import { QuizEngineModal } from '../components/QuizEngineModal';
 import { CourseManagerModal } from '../components/CourseManagerModal';
+import { NotesWorkspace } from '../components/NotesWorkspace';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'bento' | 'quests' | 'cards' | 'forecaster' | 'analytics'>('bento');
+  const [activeTab, setActiveTab] = useState<'bento' | 'quests' | 'cards' | 'notes' | 'forecaster' | 'analytics'>('bento');
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
@@ -64,6 +65,11 @@ export default function DashboardPage() {
     loadStorageItem<QuizAttempt[]>('nexus_quiz_attempts', INITIAL_QUIZ_ATTEMPTS)
   );
 
+  // Persistent Smart Notes state
+  const [notes, setNotes] = useState<NoteItem[]>(() =>
+    loadStorageItem<NoteItem[]>('nexus_smart_notes', INITIAL_NOTES)
+  );
+
   // Save changes to LocalStorage
   useEffect(() => {
     saveStorageItem('nexus_user_profile', user);
@@ -88,6 +94,10 @@ export default function DashboardPage() {
   useEffect(() => {
     saveStorageItem('nexus_quiz_attempts', quizAttempts);
   }, [quizAttempts]);
+
+  useEffect(() => {
+    saveStorageItem('nexus_smart_notes', notes);
+  }, [notes]);
 
   // XP Trigger helper
   const triggerXpGain = (amount: number, reason: string) => {
@@ -229,6 +239,42 @@ export default function DashboardPage() {
     triggerXpGain(attempt.xpEarned, `Completed Quiz "${attempt.title}"!`);
   };
 
+  // Smart Notes Handlers
+  const handleSaveNote = (savedNote: NoteItem) => {
+    setNotes((prev) => {
+      const exists = prev.some((n) => n.id === savedNote.id);
+      if (exists) {
+        return prev.map((n) => (n.id === savedNote.id ? savedNote : n));
+      }
+      return [savedNote, ...prev];
+    });
+    triggerXpGain(20, 'Saved Lecture Note 📝');
+  };
+
+  const handleDeleteNote = (id: string) => {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleGenerateFlashcardsFromNote = (noteTitle: string, newCards: Flashcard[]) => {
+    setCards((prev) => [...newCards, ...prev]);
+    // update note card count
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.title === noteTitle
+          ? { ...n, generatedFlashcardsCount: (n.generatedFlashcardsCount || 0) + newCards.length }
+          : n
+      )
+    );
+    triggerXpGain(75, `Generated ${newCards.length} Flashcards from Note! ⚡`);
+  };
+
+  const handleLaunchQuizFromNote = (quizData: { title: string; course: string; questions: any[] }) => {
+    // Open quiz modal with generated quiz
+    setIsQuizModalOpen(true);
+    triggerXpGain(100, `Created Practice Quiz "${quizData.title}"! 🎯`);
+  };
+
+
   return (
     <div className="min-h-screen bg-[#FAFAFC] text-slate-900 font-sans selection:bg-indigo-600 selection:text-white relative">
       
@@ -295,6 +341,16 @@ export default function DashboardPage() {
             >
               <Layers className="w-3.5 h-3.5" />
               <span>AI Flashcards</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('notes')}
+              className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                activeTab === 'notes' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Smart Notes</span>
             </button>
 
             <button
@@ -400,6 +456,12 @@ export default function DashboardPage() {
             className={`px-3 py-1.5 rounded-xl shrink-0 ${activeTab === 'cards' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}
           >
             Flashcards
+          </button>
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={`px-3 py-1.5 rounded-xl shrink-0 ${activeTab === 'notes' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}
+          >
+            Smart Notes
           </button>
           <button
             onClick={() => setActiveTab('forecaster')}
@@ -514,14 +576,31 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Tab 4: Dedicated Grade Forecaster */}
+        {/* Tab 4: AI Smart Notes & Lecture Workspace */}
+        {activeTab === 'notes' && (
+          <div className="animate-in fade-in duration-300">
+            <NotesWorkspace
+              notes={notes}
+              courses={courses}
+              onSaveNote={handleSaveNote}
+              onDeleteNote={handleDeleteNote}
+              onGenerateFlashcards={handleGenerateFlashcardsFromNote}
+              onLaunchQuizFromNote={handleLaunchQuizFromNote}
+              onOpenCopilot={(prompt) => {
+                setIsCopilotOpen(true);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Tab 5: Dedicated Grade Forecaster */}
         {activeTab === 'forecaster' && (
           <div className="max-w-3xl mx-auto animate-in fade-in duration-300">
             <GradeForecaster courses={courses} onAddCourse={handleAddCourse} />
           </div>
         )}
 
-        {/* Tab 5: Analytics & Flow Tab */}
+        {/* Tab 6: Analytics & Flow Tab */}
         {activeTab === 'analytics' && (
           <div className="animate-in fade-in duration-300">
             <StudyAnalytics
