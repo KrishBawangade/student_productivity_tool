@@ -1,14 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Zap, ShieldCheck, ArrowRight, LayoutGrid } from 'lucide-react';
+import { Zap, ShieldCheck, ArrowRight, LayoutGrid, User } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from './AuthProvider';
 
 interface LandingNavbarProps {
   onLaunchDemoClick: () => void;
 }
 
 export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchDemoClick }) => {
+  const { user, openAuthModal } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/75 border-b border-slate-200/80 px-6 py-4 transition-all duration-300 shadow-xs">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -44,10 +47,17 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchDemoClick 
 
         {/* Action Controls */}
         <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-            <span>V1.0 RELEASE</span>
-          </div>
+          <button
+            onClick={openAuthModal}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs"
+          >
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-4 h-4 rounded-full object-cover" />
+            ) : (
+              <User className="w-3.5 h-3.5 text-indigo-600" />
+            )}
+            <span className="hidden sm:inline truncate max-w-[100px]">{user?.name || 'Account'}</span>
+          </button>
 
           <Link
             href="/dashboard"
@@ -62,3 +72,4 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchDemoClick 
     </header>
   );
 };
+

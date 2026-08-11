@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { 
   Zap, Award, Flame, Brain, CheckCircle2, TrendingUp, MessageSquare, 
   Sparkles, Volume2, ArrowLeft, LayoutGrid, ListTodo, Layers, Calculator,
-  BarChart3, BookOpen, HelpCircle
+  BarChart3, BookOpen, HelpCircle, Cloud, CloudCheck, RefreshCw, User
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -15,6 +15,8 @@ import {
   INITIAL_SESSIONS, INITIAL_QUIZ_ATTEMPTS, INITIAL_NOTES,
   loadStorageItem, saveStorageItem 
 } from '../lib/storage';
+import { syncEngine, SyncStatus } from '../lib/syncEngine';
+import { useAuth } from '../components/AuthProvider';
 
 import { PomodoroSoundscape } from '../components/PomodoroSoundscape';
 import { QuestMatrix } from '../components/QuestMatrix';
@@ -28,6 +30,7 @@ import { CourseManagerModal } from '../components/CourseManagerModal';
 import { NotesWorkspace } from '../components/NotesWorkspace';
 
 export default function DashboardPage() {
+  const { user: authUser, openAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState<'bento' | 'quests' | 'cards' | 'notes' | 'forecaster' | 'analytics'>('bento');
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
@@ -35,6 +38,7 @@ export default function DashboardPage() {
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [xpToast, setXpToast] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('synced');
 
   // States initialized with default constants to match Server HTML 100% on initial hydration
   const [user, setUser] = useState<UserProfile>(INITIAL_USER_PROFILE);
@@ -45,21 +49,32 @@ export default function DashboardPage() {
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(INITIAL_QUIZ_ATTEMPTS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
 
-  // Safely load LocalStorage state on client after initial hydration
+  // Subscribe to syncEngine status
   useEffect(() => {
-    setUser(loadStorageItem<UserProfile>('nexus_user_profile', INITIAL_USER_PROFILE));
-    setTasks(loadStorageItem<Task[]>('nexus_tasks', INITIAL_TASKS));
-    setCards(loadStorageItem<Flashcard[]>('nexus_flashcards', INITIAL_FLASHCARDS));
-    setCourses(loadStorageItem<CourseGrade[]>('nexus_courses', INITIAL_COURSES));
-    setSessions(loadStorageItem<StudySession[]>('nexus_study_sessions', INITIAL_SESSIONS));
-    setQuizAttempts(loadStorageItem<QuizAttempt[]>('nexus_quiz_attempts', INITIAL_QUIZ_ATTEMPTS));
-    setNotes(loadStorageItem<NoteItem[]>('nexus_smart_notes', INITIAL_NOTES));
-    setIsMounted(true);
+    const unsubscribe = syncEngine.subscribe((status) => {
+      setSyncStatus(status);
+    });
+    return unsubscribe;
   }, []);
 
-  // Save changes to LocalStorage only after initial mount
+  // Safely load state on client after initial hydration
   useEffect(() => {
-    if (isMounted) saveStorageItem('nexus_user_profile', user);
+    syncEngine.loadAllData().then(({ user: syncedUser, tasks: syncedTasks, cards: syncedCards, courses: syncedCourses, notes: syncedNotes }) => {
+      setUser(syncedUser);
+      setTasks(syncedTasks);
+      setCards(syncedCards);
+      setCourses(syncedCourses);
+      setNotes(syncedNotes);
+      setIsMounted(true);
+    });
+  }, []);
+
+  // Sync state changes with syncEngine
+  useEffect(() => {
+    if (isMounted) {
+      saveStorageItem('nexus_user_profile', user);
+      syncEngine.syncUser(user);
+    }
   }, [user, isMounted]);
 
   useEffect(() => {
@@ -68,6 +83,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isMounted) saveStorageItem('nexus_flashcards', cards);
+
   }, [cards, isMounted]);
 
   useEffect(() => {
@@ -144,10 +160,12 @@ export default function DashboardPage() {
       prev.map((t) => {
         if (t.id === taskId) {
           const nextState = !t.completed;
+          const updatedTask = { ...t, completed: nextState };
           if (nextState) {
             triggerXpGain(t.xp, `Completed Quest "${t.title}"`);
           }
-          return { ...t, completed: nextState };
+          syncEngine.syncTask(updatedTask);
+          return updatedTask;
         }
         return t;
       })
@@ -162,11 +180,13 @@ export default function DashboardPage() {
       createdAt: new Date().toISOString(),
     };
     setTasks((prev) => [newTask, ...prev]);
+    syncEngine.createTask(newTask);
     triggerXpGain(10, 'Created New Quest');
   };
 
   const handleDeleteTask = (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    syncEngine.deleteTask(taskId);
   };
 
   // Flashcard Actions
@@ -194,13 +214,15 @@ export default function DashboardPage() {
 
           const mastered = newReps >= 2 || q === 4;
 
-          return {
+          const updatedCard = {
             ...c,
             easeFactor: newEf,
             interval: newInterval,
             repetitions: newReps,
             mastered,
           };
+          syncEngine.syncFlashcard(updatedCard);
+          return updatedCard;
         }
         return c;
       })
@@ -211,18 +233,21 @@ export default function DashboardPage() {
 
   const handleAddCards = (newCards: Flashcard[]) => {
     setCards((prev) => [...prev, ...newCards]);
+    syncEngine.createFlashcards(newCards);
     triggerXpGain(75, 'AI Active Recall Deck Generated');
   };
 
   // Course Actions
   const handleAddCourse = (newCourse: CourseGrade) => {
     setCourses((prev) => [...prev, newCourse]);
+    syncEngine.syncCourse(newCourse);
     triggerXpGain(25, `Added Course ${newCourse.code}`);
   };
 
   // Quiz Complete Action
   const handleQuizComplete = (attempt: QuizAttempt) => {
     setQuizAttempts((prev) => [attempt, ...prev]);
+    syncEngine.recordAnalytics('quiz', attempt);
     triggerXpGain(attempt.xpEarned, `Completed Quiz "${attempt.title}"!`);
   };
 
@@ -235,11 +260,13 @@ export default function DashboardPage() {
       }
       return [savedNote, ...prev];
     });
+    syncEngine.syncNote(savedNote);
     triggerXpGain(20, 'Saved Lecture Note 📝');
   };
 
   const handleDeleteNote = (id: string) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
+    syncEngine.deleteNote(id);
   };
 
   const handleBuyStreakShield = () => {
@@ -379,6 +406,30 @@ export default function DashboardPage() {
           {/* Quick Action Launchers & User Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Cloud Sync Status Indicator */}
+            <button
+              onClick={openAuthModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/90 hover:bg-slate-50 text-xs font-bold transition-all shadow-2xs"
+              title="Cloud Database Sync Status & Account Settings"
+            >
+              {syncStatus === 'synced' ? (
+                <>
+                  <CloudCheck className="w-4 h-4 text-emerald-500" />
+                  <span className="hidden md:inline text-emerald-700 font-mono text-[11px]">Synced</span>
+                </>
+              ) : syncStatus === 'syncing' ? (
+                <>
+                  <RefreshCw className="w-4 h-4 text-indigo-500 animate-spin" />
+                  <span className="hidden md:inline text-indigo-700 font-mono text-[11px]">Syncing...</span>
+                </>
+              ) : (
+                <>
+                  <Cloud className="w-4 h-4 text-amber-500" />
+                  <span className="hidden md:inline text-amber-700 font-mono text-[11px]">Offline</span>
+                </>
+              )}
+            </button>
+
             {/* Practice Quiz Launcher */}
             <button
               onClick={() => setIsQuizModalOpen(true)}

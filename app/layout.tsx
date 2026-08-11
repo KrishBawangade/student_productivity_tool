@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { AuthProvider } from "./components/AuthProvider";
+import { AuthModal } from "./components/AuthModal";
 
 export const metadata: Metadata = {
   title: "Nexus Academia | AI-Powered Student Productivity Dashboard",
@@ -17,9 +19,13 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans bg-[#FAFAFC] text-slate-900 selection:bg-indigo-600 selection:text-white">
         <ThemeProvider>
-          {children}
+          <AuthProvider>
+            {children}
+            <AuthModal />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
