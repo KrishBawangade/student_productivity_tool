@@ -5,58 +5,42 @@ import { X, ShieldCheck, Mail, LogIn, CheckCircle2, ArrowRight, UserCheck, Refre
 import { useAuth, AuthUser } from './AuthProvider';
 
 export const AuthModal: React.FC = () => {
-  const { user, isAuthModalOpen, closeAuthModal, login, logout } = useAuth();
+  const { user, isAuthModalOpen, closeAuthModal, socialLogin, sendMagicLink, logout } = useAuth();
   const [emailInput, setEmailInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
 
   if (!isAuthModalOpen) return null;
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      login({
-        id: `usr_google_${Date.now()}`,
-        name: 'Alex Vance (Google Account)',
-        email: 'alex.vance@gmail.com',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        provider: 'google',
-      });
+    try {
+      await socialLogin('google', emailInput || undefined);
+    } finally {
       setIsSubmitting(false);
-    }, 600);
+    }
   };
 
-  const handleGithubLogin = () => {
+  const handleGithubLogin = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      login({
-        id: `usr_github_${Date.now()}`,
-        name: 'alexvance-dev',
-        email: 'alex.vance@github.com',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-        provider: 'github',
-      });
+    try {
+      await socialLogin('github', emailInput || undefined);
+    } finally {
       setIsSubmitting(false);
-    }, 600);
+    }
   };
 
-  const handleMagicLink = (e: React.FormEvent) => {
+  const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput || !emailInput.includes('@')) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
       setMagicSent(true);
+      await sendMagicLink(emailInput);
+    } finally {
       setIsSubmitting(false);
-      setTimeout(() => {
-        login({
-          id: `usr_email_${Date.now()}`,
-          name: emailInput.split('@')[0],
-          email: emailInput,
-          provider: 'email',
-        });
-        setMagicSent(false);
-      }, 1200);
-    }, 800);
+      setMagicSent(false);
+    }
   };
 
   return (

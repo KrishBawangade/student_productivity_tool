@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { BackgroundCanvas } from './components/BackgroundCanvas';
 import { LandingNavbar } from './components/LandingNavbar';
 import { LandingHero } from './components/LandingHero';
 import { InteractiveDashboardPreview } from './components/InteractiveDashboardPreview';
 import { FeatureGrid } from './components/FeatureGrid';
-import { Zap, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { Zap, ShieldCheck, ArrowUpRight, Sparkles, UserCheck } from 'lucide-react';
 
 export default function Home() {
   const scrollToPreview = () => {
@@ -50,14 +51,21 @@ export default function Home() {
               Experience the student productivity engine designed to eliminate study burnout and maximize focus.
             </p>
 
-            <div className="mt-8 flex items-center justify-center">
-              <button
-                onClick={scrollToPreview}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/signup"
                 className="px-8 py-3.5 rounded-xl font-bold text-xs tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2"
               >
-                <span>START USING NEXUS</span>
+                <span>CREATE FREE ACCOUNT</span>
                 <ArrowUpRight className="w-4 h-4" />
-              </button>
+              </Link>
+
+              <Link
+                href="/login"
+                className="px-6 py-3.5 rounded-xl font-bold text-xs tracking-wider text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 shadow-2xs hover:scale-105 active:scale-95 transition-all duration-200"
+              >
+                <span>SIGN IN</span>
+              </Link>
             </div>
           </div>
         </section>

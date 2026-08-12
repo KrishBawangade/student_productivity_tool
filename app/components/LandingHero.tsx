@@ -35,19 +35,28 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onScrollToDemo }) => {
 
       {/* CTA Button Group */}
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <Link href="/dashboard">
+        <Link href="/signup">
           <Button
             variant="primary"
             size="lg"
             icon={<ArrowRight className="w-4 h-4" />}
           >
-            LAUNCH DASHBOARD APP
+            GET STARTED FREE
           </Button>
         </Link>
 
-        <Button variant="secondary" size="lg" onClick={onScrollToDemo}>
-          EXPLORE BENTO DEMO
-        </Button>
+        <Link href="/login">
+          <Button variant="secondary" size="lg">
+            SIGN IN TO WORKSPACE
+          </Button>
+        </Link>
+
+        <button
+          onClick={onScrollToDemo}
+          className="px-5 py-3 rounded-xl border border-slate-200 bg-white/80 hover:bg-white text-slate-700 font-bold text-xs transition-all shadow-2xs hover:border-slate-300"
+        >
+          EXPLORE DEMO
+        </button>
       </div>
 
       {/* KPI Stats Bar */}
