@@ -1,12 +1,12 @@
-import { taskRepository } from '../repositories/taskRepository.js';
+import { taskRepository, DEFAULT_DEMO_USER_ID } from '../repositories/taskRepository.js';
 import { Task } from '../types/index.js';
 
 export class TaskService {
   /**
-   * Fetch all tasks with optional filters
+   * Fetch user-scoped tasks with optional filters
    */
-  public async getTasks(priority?: string, completed?: boolean): Promise<Task[]> {
-    return taskRepository.findAll(priority, completed);
+  public async getTasks(userId?: string, priority?: string, completed?: boolean): Promise<Task[]> {
+    return taskRepository.findAll(userId, priority, completed);
   }
 
   /**
@@ -17,9 +17,10 @@ export class TaskService {
   }
 
   /**
-   * Create a new task with dynamic XP calculation
+   * Create a new task tied to a specific user
    */
   public async createTask(taskData: {
+    userId?: string;
     title: string;
     course?: string;
     dueDate?: string;
@@ -51,6 +52,7 @@ export class TaskService {
     }
 
     return taskRepository.create({
+      userId: taskData.userId || DEFAULT_DEMO_USER_ID,
       title: taskData.title.trim(),
       course: taskData.course || 'General',
       dueDate: taskData.dueDate || 'Today',
@@ -91,7 +93,6 @@ export class TaskService {
       throw new Error('Failed to update task completion');
     }
 
-    // Award XP if completed, 0 if un-checked
     const xpAwarded = completed ? updated.xp : 0;
 
     return {

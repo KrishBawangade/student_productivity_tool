@@ -3,17 +3,34 @@ import { taskService } from '../services/taskService.js';
 
 export class TaskController {
   /**
+   * Helper to extract userId from headers, query parameter, or body
+   */
+  private extractUserId(req: Request): string | undefined {
+    const headerUserId = req.headers['x-user-id'];
+    if (headerUserId) return String(headerUserId);
+
+    const queryUserId = req.query.userId;
+    if (queryUserId) return String(queryUserId);
+
+    const bodyUserId = req.body?.userId;
+    if (bodyUserId) return String(bodyUserId);
+
+    return undefined;
+  }
+
+  /**
    * GET /api/v1/tasks
-   * Fetch all tasks with optional query filters
+   * Fetch all user-scoped tasks
    */
   public async getTasks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { priority, completed } = req.query;
-      
+      const userId = this.extractUserId(req);
+
       const priorityFilter = priority ? String(priority) : undefined;
       const completedFilter = completed !== undefined ? String(completed) === 'true' : undefined;
 
-      const tasks = await taskService.getTasks(priorityFilter, completedFilter);
+      const tasks = await taskService.getTasks(userId, priorityFilter, completedFilter);
 
       res.status(200).json({
         success: true,
@@ -53,11 +70,12 @@ export class TaskController {
 
   /**
    * POST /api/v1/tasks
-   * Create a new task
+   * Create a new task tied to user ID
    */
   public async createTask(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { title, course, dueDate, priority, xp } = req.body;
+      const userId = this.extractUserId(req);
 
       if (!title) {
         res.status(400).json({
@@ -68,6 +86,7 @@ export class TaskController {
       }
 
       const newTask = await taskService.createTask({
+        userId,
         title: String(title),
         course: course ? String(course) : undefined,
         dueDate: dueDate ? String(dueDate) : undefined,

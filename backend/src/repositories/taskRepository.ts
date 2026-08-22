@@ -1,10 +1,13 @@
 import { getPrismaClient } from '../config/db.js';
 import { Task } from '../types/index.js';
 
-// Fallback in-memory task store when live Postgres connection is not active
+export const DEFAULT_DEMO_USER_ID = 'user-demo-1';
+
+// Fallback in-memory task store with default user context
 const mockTasksStore: Task[] = [
   {
     id: 't-1',
+    userId: DEFAULT_DEMO_USER_ID,
     title: 'Complete CS401 Lab Assignment 3 (Neural Nets)',
     course: 'CS401 AI',
     dueDate: 'Today, 11:59 PM',
@@ -14,6 +17,7 @@ const mockTasksStore: Task[] = [
   },
   {
     id: 't-2',
+    userId: DEFAULT_DEMO_USER_ID,
     title: 'Review Chapter 4 - Spaced Repetition Algorithms',
     course: 'COGS201',
     dueDate: 'Tomorrow',
@@ -23,6 +27,7 @@ const mockTasksStore: Task[] = [
   },
   {
     id: 't-3',
+    userId: DEFAULT_DEMO_USER_ID,
     title: 'MATH302 Practice Midterm Exam Problems',
     course: 'MATH302',
     dueDate: 'Aug 24',
@@ -34,14 +39,19 @@ const mockTasksStore: Task[] = [
 
 export class TaskRepository {
   /**
-   * Fetch all tasks from PostgreSQL via Prisma, falling back to mock store if DB is offline.
+   * Fetch user-specific tasks from PostgreSQL via Prisma or fallback store.
    */
-  public async findAll(priorityFilter?: string, completedFilter?: boolean): Promise<Task[]> {
+  public async findAll(
+    userId?: string,
+    priorityFilter?: string,
+    completedFilter?: boolean
+  ): Promise<Task[]> {
+    const targetUserId = userId || DEFAULT_DEMO_USER_ID;
     const prisma = getPrismaClient();
 
     if (prisma) {
       try {
-        const whereClause: any = {};
+        const whereClause: any = { userId: targetUserId };
         if (priorityFilter) whereClause.priority = priorityFilter;
         if (completedFilter !== undefined) whereClause.completed = completedFilter;
 
@@ -62,12 +72,12 @@ export class TaskRepository {
           createdAt: t.createdAt.toISOString(),
         }));
       } catch (error) {
-        console.warn('⚠️ Postgres Task query failed, returning fallback store:', (error as Error).message);
+        console.warn('⚠️ Postgres Task query failed, using mock store fallback:', (error as Error).message);
       }
     }
 
-    // In-memory fallback filtering
-    let tasks = [...mockTasksStore];
+    // In-memory fallback filtering by userId
+    let tasks = mockTasksStore.filter((t) => !t.userId || t.userId === targetUserId);
     if (priorityFilter) {
       tasks = tasks.filter((t) => t.priority === priorityFilter);
     }
@@ -107,42 +117,52 @@ export class TaskRepository {
   }
 
   /**
-   * Create a new Task
+   * Create a new user-scoped Task
    */
   public async create(taskData: Omit<Task, 'id'> & { id?: string; userId?: string }): Promise<Task> {
+    const targetUserId = taskData.userId || DEFAULT_DEMO_USER_ID;
     const prisma = getPrismaClient();
 
     if (prisma) {
       try {
-        // Find existing demo user or create default user ID
-        const firstUser = await prisma.user.findFirst();
-        const targetUserId = taskData.userId || firstUser?.id;
-
-        if (targetUserId) {
-          const created = await prisma.task.create({
+        // Ensure parent User record exists before creating Task
+        let user = await prisma.user.findUnique({ where: { id: targetUserId } });
+        if (!user) {
+          user = await prisma.user.create({
             data: {
-              userId: targetUserId,
-              title: taskData.title,
-              course: taskData.course || 'General',
-              dueDate: taskData.dueDate || 'Today',
-              priority: taskData.priority || 'medium',
-              xp: taskData.xp || 35,
-              completed: taskData.completed || false,
+              id: targetUserId,
+              email: `${targetUserId}@nexusacademia.edu`,
+              name: 'Scholar Student',
+              rankTitle: 'Academic Architect',
+              level: 14,
+              xp: 2450,
             },
           });
-
-          return {
-            id: created.id,
-            userId: created.userId,
-            title: created.title,
-            course: created.course,
-            dueDate: created.dueDate,
-            priority: created.priority as 'high' | 'medium' | 'low',
-            xp: created.xp,
-            completed: created.completed,
-            createdAt: created.createdAt.toISOString(),
-          };
         }
+
+        const created = await prisma.task.create({
+          data: {
+            userId: user.id,
+            title: taskData.title,
+            course: taskData.course || 'General',
+            dueDate: taskData.dueDate || 'Today',
+            priority: taskData.priority || 'medium',
+            xp: taskData.xp || 35,
+            completed: taskData.completed || false,
+          },
+        });
+
+        return {
+          id: created.id,
+          userId: created.userId,
+          title: created.title,
+          course: created.course,
+          dueDate: created.dueDate,
+          priority: created.priority as 'high' | 'medium' | 'low',
+          xp: created.xp,
+          completed: created.completed,
+          createdAt: created.createdAt.toISOString(),
+        };
       } catch (error) {
         console.warn('⚠️ Postgres create task failed, using mock store fallback:', (error as Error).message);
       }
@@ -151,6 +171,7 @@ export class TaskRepository {
     // In-memory creation fallback
     const newTask: Task = {
       id: taskData.id || `t-${Date.now()}`,
+      userId: targetUserId,
       title: taskData.title,
       course: taskData.course || 'General',
       dueDate: taskData.dueDate || 'Today',
