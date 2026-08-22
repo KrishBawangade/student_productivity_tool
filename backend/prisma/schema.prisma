@@ -1,0 +1,124 @@
+// Nexus Academia Prisma Database Schema (Backend)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  name               String
+  avatar             String?
+  rankTitle          String         @default("Academic Architect")
+  level              Int            @default(14)
+  xp                 Int            @default(2450)
+  nextLevelXp        Int            @default(3500)
+  streak             Int            @default(7)
+  streakShields      Int            @default(1)
+  totalFocusMinutes  Int            @default(420)
+  completedTasks     Int            @default(18)
+  masteredCards      Int            @default(34)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  tasks              Task[]
+  flashcards         Flashcard[]
+  courses            CourseGrade[]
+  studySessions      StudySession[]
+  quizAttempts       QuizAttempt[]
+  notes              NoteItem[]
+}
+
+model Task {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  course    String
+  dueDate   String
+  priority  String   @default("medium") // high, medium, low
+  xp        Int      @default(35)
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Flashcard {
+  id          String   @id @default(uuid())
+  userId      String
+  question    String
+  answer      String
+  topic       String
+  codeSnippet String?
+  difficulty  String   @default("Medium") // Easy, Medium, Hard
+  easeFactor  Float    @default(2.5)
+  interval    Int      @default(1)
+  repetitions Int      @default(0)
+  dueDate     DateTime @default(now())
+  mastered    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CourseGrade {
+  id           String   @id @default(uuid())
+  userId       String
+  code         String
+  name         String
+  currentGrade Float    @default(85.0)
+  targetGrade  Float    @default(90.0)
+  examWeight   Float    @default(30.0)
+  color        String   @default("#4F46E5")
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StudySession {
+  id              String   @id @default(uuid())
+  userId          String
+  course          String
+  durationMinutes Int
+  date            String   // ISO YYYY-MM-DD
+  type            String   // pomodoro, active_recall, quiz
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model QuizAttempt {
+  id             String   @id @default(uuid())
+  userId         String
+  title          String
+  course         String
+  score          Int
+  totalQuestions Int
+  date           String   // ISO YYYY-MM-DD
+  xpEarned       Int
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NoteItem {
+  id                       String   @id @default(uuid())
+  userId                   String
+  title                    String
+  course                   String
+  rawText                  String
+  summary                  String
+  keyTakeaways             String   // JSON stringified array of takeaways
+  tags                     String   // JSON stringified array of tags
+  generatedFlashcardsCount Int      @default(0)
+  generatedQuizCount       Int      @default(0)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
