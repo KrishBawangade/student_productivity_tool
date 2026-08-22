@@ -5,6 +5,7 @@ import copilotRouter from './copilot.routes.js';
 import coursesRouter from './courses.routes.js';
 import userRouter from './user.routes.js';
 import studySessionRouter from './studySession.routes.js';
+import notesRouter from './notes.routes.js';
 
 const apiRouter = Router();
 
@@ -15,6 +16,7 @@ apiRouter.use('/copilot', copilotRouter);
 apiRouter.use('/courses', coursesRouter);
 apiRouter.use('/user', userRouter);
 apiRouter.use('/sessions', studySessionRouter);
+apiRouter.use('/notes', notesRouter);
 
 export default apiRouter;
 
