@@ -4,6 +4,7 @@ import flashcardsRouter from './flashcards.routes.js';
 import copilotRouter from './copilot.routes.js';
 import coursesRouter from './courses.routes.js';
 import userRouter from './user.routes.js';
+import studySessionRouter from './studySession.routes.js';
 
 const apiRouter = Router();
 
@@ -13,6 +14,7 @@ apiRouter.use('/flashcards', flashcardsRouter);
 apiRouter.use('/copilot', copilotRouter);
 apiRouter.use('/courses', coursesRouter);
 apiRouter.use('/user', userRouter);
+apiRouter.use('/sessions', studySessionRouter);
 
 export default apiRouter;
 
