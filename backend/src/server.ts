@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { env } from './config/env.js';
 import { corsMiddleware } from './middleware/corsMiddleware.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import apiRouter from './routes/index.js';
 
 const app = express();
 
@@ -37,6 +38,9 @@ app.get('/api/v1', (req: Request, res: Response) => {
     },
   });
 });
+
+// Mount API Router Modules
+app.use('/api/v1', apiRouter);
 
 // Centralized Error Handler Middleware
 app.use(errorHandler);
